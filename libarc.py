@@ -48,6 +48,7 @@ class GitRepository:
     conf = None
 
     def __init__(self, path, force=False):
+        # False is set to True while creating a new repo and the checks here are hence not necessary
         self.worktree = path
         self.gitdir = os.path.join(path, ".git")
 
@@ -149,3 +150,16 @@ def repo_default_config():
     ret.set("core", "bare", "false")
 
     return ret
+
+
+# Implement the "init" command
+
+argsp = argsubparsers.add_parser("init", help="Initialize a new, empty repository")
+argsp.add_argument("path", metavar="directory",nargs="?", default=".", help="Where to create the repository")
+
+def cmd_init(args):
+    repo_create(args.path)
+
+
+ 
+
