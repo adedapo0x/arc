@@ -11,7 +11,6 @@ import re # support for regular expressions
 import sys # access actual command line arguments 
 import zlib # to help with compression
 
-
 argparser = argparse.ArgumentParser(description="Lightweight reimplemented git CLI")
 
 # Declare that CLI will use subcommands (subparsers in argparser slang) such as init, add 
@@ -56,7 +55,7 @@ class GitRepository:
             raise Exception(f"Not a Git repository {path}")
         
         # Read configuration file from .git/config
-        self.conf = configparser.ConfigParser() # initialize configuration parser
+        self.conf = configparser.ConfigParser() # initialize configuration parser 
         cf = repo_file(self, "config") # determine the config file path
 
         if cf and os.path.exists(cf): # check if configuration file exists
@@ -76,7 +75,7 @@ class GitRepository:
 # general path building function
 def repo_path(repo, *path):
     # Compute path under repo gitdir
-    return os.path.join(repo.getdir, *path)
+    return os.path.join(repo.gitdir, *path)
 
 
 def repo_dir(repo, *path, mkdir=False):
@@ -110,7 +109,7 @@ def repo_create(path):
     if os.path.exists(repo.worktree):
         if not os.path.isdir(repo.worktree):
             raise Exception(f"{path} is not a directory")
-        # check if gitdir exists andif it is empty
+        # check if gitdir exists and if it is empty
         if not os.path.exists(repo.gitdir) and os.listdir(repo.gitdir): 
             raise Exception(f"{path} is not empty")
         
@@ -160,6 +159,27 @@ argsp.add_argument("path", metavar="directory",nargs="?", default=".", help="Whe
 def cmd_init(args):
     repo_create(args.path)
 
+
+# Implementing repo_find() function that finds the root of the current directory that we are currently working in
+# We identify a path as a repository by the presence of a .git directory
+
+def repo_find(path=".", required=True):
+    path = os.path.realpath(path)  # gets absolute path
+
+    # check if path contains a .git directory, if found, we are in root
+    if os.path.isdir(os.path.join(path, ".git")):
+        return GitRepository(path) # return GitRepository object
+    
+    # if we haven't returned, move to parent directory to check
+    parent = os.path.realpath(os.path.join(path, ".."))
+    # check if we have reached the root directory
+    if parent == path:
+        if required: 
+            raise Exception("No Git directory")
+        else:
+            return None
+        
+    return repo_find(parent, required)
 
  
 
