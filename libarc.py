@@ -193,6 +193,32 @@ The header is followed by an ASCII space (0x20) ie a regular space character
 then the size of the object in bytes, 
 then the null byte (0x00)
 then actual content of the object
+Note that all objects are stored compressed with zlib
 '''
+
+# We now create a generic object for all git object types
+# We create the object with two unimplemented methods that must be implemented by subclasses, 
+# the serialize() and deserialize() method with an __init__ constructor that creates a new empty object using init method or uses data if provided to create an object
+
+class GitObject:
+    def __init__(self, data=None):
+        if data != None:
+            self.deserialize(data)
+        else:
+            self.init()
+
+    def serialize(self, repo):
+        '''
+        This function MUST BE IMPLEMENTED by subclasses.
+        It must read the object's content from self.data, a byte string and convert it to a meaningful representation which depends on each subclass
+        '''
+        raise Exception("Unimplemented!")
+    def deserialize(self, data):
+        raise Exception("Unimplemented!")
+    
+    def init(self):
+        pass # Do nothing, this is a reasonable default
+    
+
 
 
