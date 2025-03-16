@@ -182,4 +182,17 @@ def repo_find(path=".", required=True):
     return repo_find(parent, required)
 
  
+# Git Objects, most things in Git are stored as objects
+'''
+An object starts with an header that specifies its type. There are 4 main types of objects
+ - blob: stores file content
+ - commit: Records snapshot of the project
+ - tag: Marks specific points in history
+ - tree: Represents directories and files
+The header is followed by an ASCII space (0x20) ie a regular space character
+then the size of the object in bytes, 
+then the null byte (0x00)
+then actual content of the object
+'''
+
 
