@@ -218,6 +218,43 @@ class GitObject:
     
     def init(self):
         pass # Do nothing, this is a reasonable default
+
+# Reading Objects
+
+'''
+To read an object we get its SHA 1 hash, then compute path from it's hash. Since first two character are directory, the rest represents the file
+So we would have first two characters then a directory delimiter (/) then look up the remaining part in the "objects" directory in gitdir.
+We then read the file as a binary file and decompress it using zlib
+After decompression, extract the two header components: the object type and its size, from the type we determine which class to use .
+Convert size to Python integer and check if it matches. Then call the correct constructor for that object format 
+'''
+
+def object_read(repo, sha):
+    '''
+    Read the object SHA from Git repository repo. Return a Git object whose exact type depends on the object
+    '''
+
+    path = repo_file(repo, "objects", sha[0:2], sha[2:])
+    if not os.path.isfile(path):
+        return None
+    
+    with open(path, "rb") as f:
+        raw = zlib.decompress(f.read())
+
+        ## Read object type
+        x = raw.find(b' ') # finds the position of the first space character in raw data
+        fmt = raw[0:x] # extracts everything from beginning of raw up until just before the space character. This is the object type
+                        # since the format is that the header that specifies the type then space then size then null byte then actual content
+
+        ## Read and validate the object size
+        y = raw.find(b'\x00', x) # finds the position of the null character starting from x
+        
+        # this gets the size, as it extracts the bytes between the space and the null byte which would contain the size, then converts it to an ASCII string
+        # then to an integer which is stored in variable size
+        size = int(raw[x:y].decode("ascii"))
+        if size != 
+
+
     
 
 
