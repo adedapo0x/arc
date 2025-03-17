@@ -252,7 +252,22 @@ def object_read(repo, sha):
         # this gets the size, as it extracts the bytes between the space and the null byte which would contain the size, then converts it to an ASCII string
         # then to an integer which is stored in variable size
         size = int(raw[x:y].decode("ascii"))
-        if size != 
+        if size != len(raw)-y-1: # Since y + 1 is where the content begins so we check if the size matches the actual content length
+            raise Exception(f"Malformed object {sha}: bad length")
+        
+        # Pick constructor
+        match fmt:
+            case b'commit': c=GitCommit
+            case b'tree'  : c=GitTree
+            case b'tag'   : c=GitTag
+            case b'blob'  : c=GitBlob
+            case _:
+                raise Exception(f"Unknown type {fmt.decode("ascii")} for object {sha}")   
+            
+        # Call constructor and return object
+        return c(raw[y+1:])
+
+
 
 
     
