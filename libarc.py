@@ -219,6 +219,7 @@ class GitObject:
     def init(self):
         pass # Do nothing, this is a reasonable default
 
+
 # Reading Objects
 
 '''
@@ -266,8 +267,30 @@ def object_read(repo, sha):
             
         # Call constructor and return object
         return c(raw[y+1:])
+    
 
+## Writing Objects
+# More like reverse of reading the object, we insert header, compute the hash, zlib-compress everything and write the result in the correct
+# location. 
 
+def object_write(obj, repo=None):
+    # Serialize object data
+    data = obj.serialize()
+    # add header
+    result = obj.fmt + b' ' + str(len(data)).encode() + b'\x00' + data
+    # Compute hash
+    sha = hashlib.sha1(result).hexdigest()
+
+    if repo:
+        # Compute path
+        path = repo_file(repo, "objects", sha[0:2], sha[2:], mkdir=True)
+
+        # ensures we only write objects that do not previously exists since Git objects are immutable and are only stored once
+        if not os.path.exists(path): 
+            with open(path, 'wb') as f:
+                # Compress and write
+                f.write(zlib.compress(result))
+    return sha
 
 
     
