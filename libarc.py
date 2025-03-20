@@ -293,7 +293,54 @@ def object_write(obj, repo=None):
     return sha
 
 
-    
+## Working With Blobs
+'''
+Blobs are one of the types of Git object, and are the simplest of those four types, because they have no actual format. Blobs are user's data:
+the content of every file you put in git (main.c, logo.png, README.md) is stored as blob. MAkes them easy to manipulate since they have no actual syntax
+or constraints beyond basic object storage mechanism: they are just unspecified data
+Creating a GitBlob is trivial, the serialize() and deserialize() functions just have to store and return their input unmodified. 
+'''
+
+class GitBlob(GitObject):
+    fmt = b'blob'
+
+    def serialize(self):
+        return self.blobdata
+
+    def deserialize(self, data):
+        self.blobdata = data
 
 
+
+## cat-file command
+argsp = argsubparsers.add_parser("cat-file", help="Provide content of repository objects")
+
+argsp.add_argument("type", metavar="type", choices=["blob", "commit", "tag", "tree"])
+argsp.add_argument("object", metavar="object", help="The object to display")
+
+# we then implement the functions which just call into existing code we wrote earlier
+def cmd_cat_file(args):
+    repo = repo_find()
+    cat_file(repo, args.object, fmt=args.type.encode())
+
+def cat_file(repo, obj, fmt=None):
+    obj = object_read(repo, object_find(repo, obj, fmt=fmt))
+    sys.stdout.buffer.write(obj.serialize()) 
+
+
+# object find implementation, still to be changed I think, for now just return one of its arguments unmodified like this
+def object_find(repo, name, fmt=None, follow=True):
+    return name
+
+'''
+The reason for just implementing the object_find() like this for now, is because Git has a lot of ways to refer to object, such as
+full hash, short hash, tags, etc. object_find() would be our name resolution function. It will be implemented later, so for now it is just a temporary placeholder
+so for now, the only way we can refer to an object is by its full hash
+'''
+
+
+## The hash-object command
+'''
+hash-object command is basically the opposite of cat-file, it reads a file
+'''
 
