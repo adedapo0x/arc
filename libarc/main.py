@@ -229,7 +229,7 @@ We then read the file as a binary file and decompress it using zlib
 After decompression, extract the two header components: the object type and its size, from the type we determine which class to use .
 Convert size to Python integer and check if it matches. Then call the correct constructor for that object format 
 '''
-
+ 
 def object_read(repo, sha):
     '''
     Read the object SHA from Git repository repo. Return a Git object whose exact type depends on the object
@@ -313,6 +313,11 @@ class GitBlob(GitObject):
 
 
 ## cat-file command
+'''
+Prints the raw contents of an object to stdout, uncompressed and without the git header. Our version will take in two arguments,
+a type and an object identifier
+SYNTAX: arc cat-file TYPE OBJECT
+'''
 argsp = argsubparsers.add_parser("cat-file", help="Provide content of repository objects")
 
 argsp.add_argument("type", metavar="type", choices=["blob", "commit", "tag", "tree"])
@@ -339,8 +344,33 @@ so for now, the only way we can refer to an object is by its full hash
 '''
 
 
-## The hash-object command
 '''
-hash-object command is basically the opposite of cat-file, it reads a file
+hash-object command is basically the opposite of cat-file, it reads a file, computes its hash as an object, either storing it in the repo
+(if the -w flag passed) or just printing its hash.
+Syntax here: arc hash-object [-w] [-t TYPE] FILE
 '''
 
+argsp = argsubparsers.add_parser(
+    "hash-object",
+    help="Compute object ID and optionally creates a blob from the file"
+)
+
+argsp.add_argument("-t",
+                   metavar="type", dest="type", choices=["blob", "commit", "tag", "three"],
+                   default="blob", help="Specify the type")
+argsp.add_argument("-w", dest="write", action="store_true", 
+                   action="store-true",
+                   help="Actually wriite the object into the database")
+argsp.add_argument("path", help="Read object from <file> ")
+
+# We then ceate a bridge function for it, and the actual implementaion is very simple
+def cmd_hash_object(args):
+    if args.write:
+        repo = repo_find() 
+    else:
+        repo = None
+
+    with open(args.path, "rb") as fd:
+        sha = object_hash(fd, args.type.encode(), repo)   
+        print(sha)                                                                                                                                                                                                                                                                                                                                                                                               
+ 

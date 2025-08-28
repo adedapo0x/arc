@@ -1,2 +1,7 @@
-from libarc import main
-main()
+from libarc.main import main
+
+if __name__ == "__main__":
+    main()
+
+
+
