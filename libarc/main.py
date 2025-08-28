@@ -2,19 +2,19 @@ import argparse # to parse command line arguments
 import configparser # used to read configuration files similar to Microsoft INI format
 
 from datetime import datetime
-import grp, pwd
+import grp, pwd     # read users/groupp database on Unix
 from fnmatch import fnmatch # to aid support for filename pattern matching like .gitignore
 import hashlib # in order to use SHA-1 function (cryptographic hashing)
 from math import ceil
-import os
+import os       # os and os.path gives filesystems abstraction
 import re # support for regular expressions
-import sys # access actual command line arguments 
+import sys # access actual command line arguments in sys.argv
 import zlib # to help with compression
 
 argparser = argparse.ArgumentParser(description="Lightweight reimplemented git CLI")
 
 # Declare that CLI will use subcommands (subparsers in argparser slang) such as init, add 
-# and that it is required for every invocation of the commmand
+# and that it is required for every invocation of the commmand e.g git COMMAND
 argsubparsers = argparser.add_subparsers(title="Commands", dest="command")
 argsubparsers.required = True 
 
@@ -47,7 +47,7 @@ class GitRepository:
     conf = None
 
     def __init__(self, path, force=False):
-        # False is set to True while creating a new repo and the checks here are hence not necessary
+        # force is set to True while creating a new repo and the checks here are hence not necessary
         self.worktree = path
         self.gitdir = os.path.join(path, ".git")
 
@@ -77,6 +77,9 @@ def repo_path(repo, *path):
     # Compute path under repo gitdir
     return os.path.join(repo.gitdir, *path)
 
+
+# implementation difference between repo_dir and repo_file is that for repo_dir, it creates the entire directory path you pass to it. It is for creating
+# directory structures, while repo_file only creates the containing directories for the file you are about to create. It is for preparing a path to write a file to.
 
 def repo_dir(repo, *path, mkdir=False):
     '''Same as repo_path but mkdir *path if absent if mkdir i.e makes a directory out of the path if mkdir=True and it was previously not a directory'''
@@ -117,12 +120,13 @@ def repo_create(path):
         os.makedirs(repo.worktree)
 
 
-    # if repo_dir returns None or empty string (indicating failure) and AssertionError is raised
+    # if repo_dir returns None or empty string (indicating failure) an AssertionError is raised
     assert repo_dir(repo, "branches", mkdir=True)
     assert repo_dir(repo, "objects", mkdir=True)
     assert repo_dir(repo, "refs", "tags", mkdir=True)
     assert repo_dir(repo, "refs", "heads", mkdir=True)
 
+    # repo_file in these provides file path as argument for the open function, the write option creates the file not the repo_file
 
     #.git/description
     with open(repo_file(repo, "description"), "w") as f:
@@ -183,18 +187,6 @@ def repo_find(path=".", required=True):
 
  
 # Git Objects, most things in Git are stored as objects
-'''
-An object starts with an header that specifies its type. There are 4 main types of objects
- - blob: stores file content
- - commit: Records snapshot of the project
- - tag: Marks specific points in history
- - tree: Represents directories and files
-The header is followed by an ASCII space (0x20) ie a regular space character
-then the size of the object in bytes, 
-then the null byte (0x00)
-then actual content of the object
-Note that all objects are stored compressed with zlib
-'''
 
 # We now create a generic object for all git object types
 # We create the object with two unimplemented methods that must be implemented by subclasses, 
